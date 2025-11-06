@@ -1,27 +1,22 @@
-# Stage 1: Build
-FROM node:18-alpine AS builder
+# Dockerfile
+FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy package.json & package-lock.json
 COPY package*.json ./
-RUN npm ci
 
+# Cài dependencies
+RUN npm install
+
+# Copy toàn bộ source code
 COPY . .
+
+# Build NestJS project
 RUN npm run build
 
-# Stage 2: Runner
-FROM node:18-alpine AS runner
-
-WORKDIR /app
-
-# Copy package + dist + proto
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/proto ./proto
-
-# Cài dependencies production
-RUN npm install --only=production
-
+# Expose port 8080
 EXPOSE 3005
 
-CMD ["node", "dist/main.js"]
+# Chạy app
+CMD ["npm", "run", "start:prod"]
