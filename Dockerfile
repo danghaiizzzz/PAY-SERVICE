@@ -1,41 +1,28 @@
+# Stage 1: Build
 FROM node:18-alpine AS builder
 
-# Tạo thư mục làm việc
 WORKDIR /app
 
-# Copy file khai báo dependencies
 COPY package*.json ./
-
-# Cài dependencies (npm ci nhanh và sạch hơn)
 RUN npm ci
 
-# Copy toàn bộ source code
 COPY . .
-
-# Build NestJS sang JS (dist/)
 RUN npm run build
 
+# Stage 2: Runner
 FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Copy file cần thiết từ builder stage
+# Copy package + dist + proto + .env nếu có
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/proto ./proto
+COPY --from=builder /app/.env ./
 
-# Cài đặt dependencies cho production
-RUN npm ci 
+# Cài dependencies production
+RUN npm install --only=production
 
-# Expose port Gateway
 EXPOSE 3005
 
-# Lệnh khởi động
-CMD ["npm", "run", "start:prod"]
-
-
-# Nếu dùng .env
-
-# thêm dòng:
-
-# COPY --from=builder /app/.env ./
+CMD ["node", "dist/main.js"]

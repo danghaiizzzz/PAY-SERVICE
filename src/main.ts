@@ -15,7 +15,7 @@ async function bootstrap() {
     options: {
       package: PAY_PACKAGE_NAME,
       protoPath: join(process.cwd(), 'proto/pay.proto'), 
-      url: '0.0.0.0:50055', 
+      url: process.env.GRPCPORT, 
       loader: {
         keepCase: true,
         objects: true,
