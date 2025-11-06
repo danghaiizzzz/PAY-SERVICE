@@ -50,7 +50,7 @@ export class PayRestController {
     try {
       const signatureHeader =
         req.headers['x-casso-signature'] || req.headers['X-Casso-Signature'];
-      const secretKey = 'g3oZ950pJQ4k6REhOPGkx37RsXgWz9QJ9RCAZ7i0yagLF32XQZtemQ6r3JIo4MCr';
+      const secretKey = '8NoHFc7nWWwzGi9UufMacrcRaRoHt6bgIyZxmSX5KXXrp9AY2i3mnNhiK4TzKRBh';
 
       if (!secretKey) {
         console.error('❌ Missing CASSO_SECRET_KEY');
