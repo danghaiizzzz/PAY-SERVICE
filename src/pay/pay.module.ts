@@ -8,7 +8,7 @@ import { PayRestController } from './payrest.controller';
 @Module({
   imports: [TypeOrmModule.forFeature([Pay])], 
   providers: [PayService],
-  controllers: [PayController, PayRestController],
+  controllers: [PayController],
   exports: [PayService], // nếu muốn dùng ở module khác
 })
 export class PayModule {}
