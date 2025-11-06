@@ -97,7 +97,8 @@ export class PayService {
     const pay = await this.payRepository.findOne({ where: { userId: data.userId } });
     if (!pay) throw new RpcException({code: status.NOT_FOUND ,message: 'Không tìm thấy ví của user'});
     if (data.amount < 0) throw new RpcException({code: status.INVALID_ARGUMENT ,message: 'Số tiền không hợp lệ'});
-    const qr = `https://img.vietqr.io/image/vietinbank-0396436954-XsnUkVz.jpg?amount=${data.amount}&addInfo=HDG%STUDIO${data.userId}%${data.username}%${data.amount}&accountName=Pham+Hai+Dang`;
+    const addInfo = encodeURIComponent(`HDG STUDIO ${data.userId} ${data.username} ${data.amount}`);
+    const qr = `https://img.vietqr.io/image/vietinbank-0396436954-XsnUkVz.jpg?amount=${data.amount}&addInfo=${addInfo}&accountName=Pham+Hai+Dang`;
     return { qr: qr, username: data.username };
   }
 
