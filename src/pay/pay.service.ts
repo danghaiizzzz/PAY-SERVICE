@@ -122,16 +122,18 @@ export class PayService {
       const normalized = description.replace(/%/g, ' ').trim();
       const parts = normalized.split(/\s+/);
 
+      const studioIndex = parts.findIndex(p => p.toUpperCase() === 'STUDIO');
+
       // Format phải có ít nhất 5 phần tử: ["HDG", "STUDIO", "1", "dang123", "50000"]
-      if (parts.length < 5) {
-        console.log(`⚠️ ND không đúng format (thiếu ID, username hoặc amount): ${description}`);
+      if (studioIndex === -1 || parts.length < studioIndex + 4) {
+        console.log(`⚠️ ND thiếu dữ liệu hợp lệ sau 'STUDIO': ${description}`);
         return;
       }
 
       // ✅ Lấy 3 phần tử sau cùng
-      const userId = parseInt(parts[2]);
-      const username = parts[3];
-      const inputAmount = parseInt(parts[4]);
+      const userId = parseInt(parts[studioIndex + 1]);
+      const username = parts[studioIndex + 2];
+      const inputAmount = parseInt(parts[studioIndex + 3]);
 
       if (isNaN(userId) || isNaN(inputAmount)) {
         console.log(`⚠️ Dữ liệu không hợp lệ (ID hoặc số tiền): ${description}`);
