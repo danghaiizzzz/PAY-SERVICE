@@ -15,7 +15,7 @@ async function bootstrap() {
     options: {
       package: PAY_PACKAGE_NAME,
       protoPath: join(process.cwd(), 'proto/pay.proto'), 
-      url: '0.0.0.0:50056', 
+      url: '0.0.0.0:50055', 
       loader: {
         keepCase: true,
         objects: true,
@@ -25,7 +25,7 @@ async function bootstrap() {
   });
 
   await app.startAllMicroservices();
-  logger.log(`✅ gRPC server running on 0.0.0.0:50056`);
+  logger.log(`✅ gRPC server running on 0.0.0.0:50055`);
 
   await app.listen(process.env.PORT ?? 3005);
   logger.log(`✅ HTTP server running on ${process.env.PORT ?? 3005}`);
