@@ -1,26 +1,36 @@
-# Stage 1: Build
-FROM node:20-alpine AS builder
+# =========================================
+# 🧩 STEP 1: Build app (dành cho NestJS)
+# =========================================
+FROM node:18-alpine AS builder
 
+# Tạo thư mục làm việc
 WORKDIR /app
 
+# Copy file khai báo dependencies
 COPY package*.json ./
+
+# Cài dependencies (npm ci nhanh và sạch hơn)
 RUN npm ci
 
+# Copy toàn bộ source code
 COPY . .
+
+# Build NestJS sang JS (dist/)
 RUN npm run build
 
-# Stage 2: Runner
-FROM node:20-alpine
-
+# =========================================
+# 🚀 STEP 2: Run app
+# =========================================
+FROM node:18-alpine AS runner
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install --only=production
-
-# Copy dist từ builder
+COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/proto ./proto   
+# COPY --from=builder /app/.env ./
+COPY --from=builder /app/proto ./proto
 
-EXPOSE 8080
+RUN npm ci --omit=dev
 
-CMD ["node", "dist/main.js"]
+EXPOSE 3005
+
+CMD ["npm", "run", "start:prod"]
