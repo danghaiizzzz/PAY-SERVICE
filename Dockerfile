@@ -14,11 +14,10 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Copy package + dist + proto + .env nếu có
+# Copy package + dist + proto
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/proto ./proto
-COPY --from=builder /app/.env ./
 
 # Cài dependencies production
 RUN npm install --only=production
