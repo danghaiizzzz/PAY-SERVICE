@@ -104,52 +104,49 @@ export class PayService {
 
   async handleCassoTransaction(body: any): Promise<void> {
     try {
-      const transactions = body?.data ?? [];
-
-      if (!Array.isArray(transactions) || transactions.length === 0) {
-        console.log('❌ Webhook không có dữ liệu giao dịch.');
+      const data = body?.data;
+      if (!data || typeof data !== 'object') {
+        console.log('❌ Webhook không có dữ liệu giao dịch hoặc sai cấu trúc.');
         return;
       }
 
-      for (const tx of transactions) {
-        const { description, amount, tid } = tx;
+      const { description, id: tid } = data;
+      console.log(`📩 Nhận giao dịch ${tid}: ND: ${description}`);
 
-        console.log(`📩 Nhận giao dịch ${tid}: +${amount}đ | ND: ${description}`);
-
-        if (!description) {
-          console.log('⚠️ Thiếu nội dung giao dịch.');
-          continue;
-        }
-
-        // ✅ Chuẩn hóa NDCK: thay dấu '%' bằng ' ' để dễ split
-        const normalized = description.replace(/%/g, ' ').trim();
-
-        // ✅ Tách phần ND thành mảng
-        const parts = normalized.split(/\s+/); // tách theo khoảng trắng
-
-        // 🧩 Tìm vị trí có từ "STUDIO"
-        const studioIndex = parts.findIndex((p) => p.toUpperCase() === 'STUDIO');
-        if (studioIndex === -1 || parts.length < studioIndex + 3) {
-          console.log(`⚠️ ND không đúng format (thiếu STUDIO hoặc userId): ${description}`);
-          continue;
-        }
-        
-        const userId = parseInt(parts[studioIndex + 1]);
-        if (isNaN(userId)) {
-          console.log(`⚠️ userId không hợp lệ trong NDCK: ${description}`);
-          continue;
-        }
-
-        // ✅ Cộng tiền vào ví
-        const request: UpdateMoneyRequest = {
-          userId,
-          amount: amount,
-        };
-
-        await this.updateMoney(request);
-
-        console.log(`✅ Đã cộng ${amount}đ cho userId ${userId}`);
+      if (!description) {
+        console.log('⚠️ Thiếu nội dung giao dịch.');
+        return;
       }
+
+      // ✅ Chuẩn hóa ND
+      const normalized = description.replace(/%/g, ' ').trim();
+      const parts = normalized.split(/\s+/);
+
+      // Format phải có ít nhất 5 phần tử: ["HDG", "STUDIO", "1", "dang123", "50000"]
+      if (parts.length < 5) {
+        console.log(`⚠️ ND không đúng format (thiếu ID, username hoặc amount): ${description}`);
+        return;
+      }
+
+      // ✅ Lấy 3 phần tử sau cùng
+      const userId = parseInt(parts[2]);
+      const username = parts[3];
+      const inputAmount = parseInt(parts[4]);
+
+      if (isNaN(userId) || isNaN(inputAmount)) {
+        console.log(`⚠️ Dữ liệu không hợp lệ (ID hoặc số tiền): ${description}`);
+        return;
+      }
+
+      // ✅ Gọi updateMoney
+      const request: UpdateMoneyRequest = {
+        userId,
+        amount: inputAmount,
+      };
+
+      await this.updateMoney(request);
+
+      console.log(`✅ Đã cộng ${inputAmount}đ cho userId ${userId} (username: ${username})`);
     } catch (error) {
       console.log('❌ Lỗi khi xử lý webhook Casso:', error);
       throw new RpcException({
@@ -158,4 +155,5 @@ export class PayService {
       });
     }
   }
+
 }
