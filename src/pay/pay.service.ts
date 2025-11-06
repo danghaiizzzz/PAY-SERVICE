@@ -154,7 +154,7 @@ export class PayService {
       console.log('❌ Lỗi khi xử lý webhook Casso:', error);
       throw new RpcException({
         code: status.INTERNAL,
-        message: 'Lỗi xử lý webhook Casso',
+        message: 'Lỗi xử lý webhook Cassosss',
       });
     }
   }
