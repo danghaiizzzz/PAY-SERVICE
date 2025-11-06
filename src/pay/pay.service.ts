@@ -13,6 +13,7 @@ import {
 } from 'proto/pay.pb';
 import { status } from '@grpc/grpc-js';
 import { RpcException } from '@nestjs/microservices';
+import { winstonLogger } from 'src/logger/logger.config';
 
 @Injectable()
 export class PayService {
@@ -147,6 +148,8 @@ export class PayService {
       };
 
       await this.updateMoney(request);
+
+      winstonLogger.log({ nhiemVu: 'thongBaoNapTien', username: username, amount: inputAmount })
 
       console.log(`✅ Đã cộng ${inputAmount}đ cho userId ${userId} (username: ${username})`);
     } catch (error) {
