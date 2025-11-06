@@ -7,11 +7,11 @@ import type { Request, Response } from 'express';
 export class PayRestController {
   constructor(private readonly payService: PayService) {}
 
-  /**
-   * Đệ quy sắp xếp object theo key (chuẩn Casso yêu cầu)
-   */
+  /** Đệ quy sắp xếp object theo key (giống Java TreeMap) */
   private sortObjByKey(obj: any): any {
     if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map((v) => this.sortObjByKey(v));
+
     const sorted: any = {};
     Object.keys(obj)
       .sort()
@@ -21,63 +21,55 @@ export class PayRestController {
     return sorted;
   }
 
-  /**
-   * Xác minh chữ ký từ header `X-Casso-Signature`
-   */
+  /** Verify chữ ký Casso */
   private verifyCassoSignature(signatureHeader: string, data: any, secretKey: string): boolean {
-    const match = signatureHeader?.match(/t=(\d+),v1=([a-f0-9]+)/);
+    if (!signatureHeader) return false;
+
+    const match = signatureHeader.match(/t=(\d+),v1=([a-f0-9]+)/i);
     if (!match) return false;
 
-    const timestamp = parseInt(match[1], 10); // ✅ ép kiểu số cho chuẩn
-    const receivedSignature = match[2];
+    const timestamp = match[1];
+    const receivedSig = match[2];
 
     const sortedData = this.sortObjByKey(data);
-    const message = timestamp + '.' + JSON.stringify(sortedData); // ✅ giống Casso mẫu
+    const message = `${timestamp}.${JSON.stringify(sortedData)}`;
 
-    const computedSignature = crypto
-      .createHmac('sha512', secretKey)
-      .update(message)
-      .digest('hex');
+    const hmac = crypto.createHmac('sha512', secretKey);
+    hmac.update(Buffer.from(message, 'utf8'));
+    const computedSig = hmac.digest('hex');
 
-    return computedSignature === receivedSignature;
+    return computedSig === receivedSig;
   }
 
-  /**
-   * Endpoint Webhook Casso V2
-   */
   @Post('casso')
   async handleCassoWebhook(@Req() req: Request, @Res() res: Response) {
     try {
-      const signatureHeader =
-        req.headers['x-casso-signature'] || req.headers['X-Casso-Signature'];
       const secretKey = '8NoHFc7nWWwzGi9UufMacrcRaRoHt6bgIyZxmSX5KXXrp9AY2i3mnNhiK4TzKRBh';
+      const signatureHeader = req.headers['x-casso-signature'] as string;
 
-      if (!secretKey) {
-        console.error('❌ Missing CASSO_SECRET_KEY');
-        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
+      // ⚠️ Lưu ý: cần bật rawBody trong main.ts
+      const rawBody = (req as any).rawBody?.toString();
+      if (!rawBody) {
+        console.error('❌ rawBody not available');
+        return res.status(400).json({ success: false, message: 'Missing rawBody' });
       }
 
-      // ⚠️ req.rawBody cần được bật trong main.ts (để Casso xác thực chính xác)
-      const rawBody = (req as any).rawBody;
       const parsedBody = JSON.parse(rawBody);
 
-      // ✅ Kiểm tra chữ ký
-      const isValid = this.verifyCassoSignature(signatureHeader as string, parsedBody, secretKey);
+      const isValid = this.verifyCassoSignature(signatureHeader, parsedBody, secretKey);
       if (!isValid) {
-        console.warn('❌ Invalid signature from Casso');
-        return res
-          .status(HttpStatus.FORBIDDEN)
-          .json({ success: false, message: 'Invalid signature' });
+        console.warn('❌ Invalid signature');
+        return res.status(HttpStatus.FORBIDDEN).json({ success: false, message: 'Invalid signature' });
       }
 
-      // ✅ Xử lý giao dịch (bạn có thể bật lại khi cần)
+      console.log('✅ Verified Casso webhook:', parsedBody);
+
       // await this.payService.handleCassoTransaction(parsedBody.data);
 
-      console.log('✅ Webhook verified & received:', parsedBody);
       return res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
-      console.error('🔥 Casso webhook error:', error);
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false });
+      console.error('🔥 Webhook error:', error);
+      return res.status(500).json({ success: false });
     }
   }
 }
