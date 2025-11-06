@@ -103,7 +103,6 @@ export class PayService {
 
   async handleCassoTransaction(body: any): Promise<void> {
     try {
-      // Casso V2 thường gửi dữ liệu trong body.data
       const transactions = body?.data ?? [];
 
       if (!Array.isArray(transactions) || transactions.length === 0) {
@@ -112,24 +111,36 @@ export class PayService {
       }
 
       for (const tx of transactions) {
-        const { description, amount, tid, cusum_balance } = tx;
+        const { description, amount, tid } = tx;
 
         console.log(`📩 Nhận giao dịch ${tid}: +${amount}đ | ND: ${description}`);
 
-        // 👉 Giả sử bạn có quy tắc NDCK kiểu "NAP USER123 50000"
-        const match = description?.match(/USER(\d+)/i);
-        if (!match) {
-          console.log(`⚠️ Không tìm thấy userId trong NDCK: ${description}`);
+        if (!description) {
+          console.log('⚠️ Thiếu nội dung giao dịch.');
           continue;
         }
 
-        const userId = parseInt(match[1]);
+        // ✅ Chuẩn hóa NDCK: thay dấu '%' bằng ' ' để dễ split
+        const normalized = description.replace(/%/g, ' ').trim();
+
+        // ✅ Tách phần ND thành mảng
+        const parts = normalized.split(/\s+/); // tách theo khoảng trắng
+
+        // 🧩 Tìm vị trí có từ "STUDIO"
+        const studioIndex = parts.findIndex((p) => p.toUpperCase() === 'STUDIO');
+        if (studioIndex === -1 || parts.length < studioIndex + 3) {
+          console.log(`⚠️ ND không đúng format (thiếu STUDIO hoặc userId): ${description}`);
+          continue;
+        }
+
+        // ✅ Lấy userId ngay sau "STUDIO"
+        const userId = parseInt(parts[studioIndex + 1]);
         if (isNaN(userId)) {
           console.log(`⚠️ userId không hợp lệ trong NDCK: ${description}`);
           continue;
         }
 
-        // 👉 Cộng tiền vào ví
+        // ✅ Cộng tiền vào ví
         const request: UpdateMoneyRequest = {
           userId,
           amount: amount,
@@ -147,4 +158,5 @@ export class PayService {
       });
     }
   }
+
 }

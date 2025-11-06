@@ -64,7 +64,7 @@ export class PayRestController {
 
       console.log('✅ Verified Casso webhook:', parsedBody);
 
-      // await this.payService.handleCassoTransaction(parsedBody.data);
+      await this.payService.handleCassoTransaction(parsedBody);
 
       return res.status(HttpStatus.OK).json({ success: true });
     } catch (error) {
