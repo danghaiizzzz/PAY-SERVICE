@@ -133,8 +133,7 @@ export class PayService {
           console.log(`⚠️ ND không đúng format (thiếu STUDIO hoặc userId): ${description}`);
           continue;
         }
-
-        // ✅ Lấy userId ngay sau "STUDIO"
+        
         const userId = parseInt(parts[studioIndex + 1]);
         if (isNaN(userId)) {
           console.log(`⚠️ userId không hợp lệ trong NDCK: ${description}`);
@@ -155,9 +154,8 @@ export class PayService {
       console.log('❌ Lỗi khi xử lý webhook Casso:', error);
       throw new RpcException({
         code: status.INTERNAL,
-        message: 'Lỗi xử lý webhook Cassosss',
+        message: 'Lỗi xử lý webhook',
       });
     }
   }
-
 }
