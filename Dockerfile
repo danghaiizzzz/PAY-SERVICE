@@ -32,5 +32,7 @@ COPY --from=builder /app/proto ./proto
 RUN npm ci --omit=dev
 
 EXPOSE 3005
+# gRPC port
+EXPOSE 50055
 
 CMD ["npm", "run", "start:prod"]
