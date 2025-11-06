@@ -33,6 +33,6 @@ RUN npm ci --omit=dev
 
 EXPOSE 3005
 # gRPC port
-EXPOSE 50055
+EXPOSE 50056
 
 CMD ["npm", "run", "start:prod"]
