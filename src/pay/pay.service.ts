@@ -100,4 +100,51 @@ export class PayService {
     const qr = `https://img.vietqr.io/image/vietinbank-0396436954-XsnUkVz.jpg?amount=${data.amount}&addInfo=HDG%STUDIO${data.userId}%${data.username}%${data.amount}&accountName=Pham+Hai+Dang`;
     return { qr: qr, username: data.username };
   }
+
+  async handleCassoTransaction(body: any): Promise<void> {
+    try {
+      // Casso V2 thường gửi dữ liệu trong body.data
+      const transactions = body?.data ?? [];
+
+      if (!Array.isArray(transactions) || transactions.length === 0) {
+        console.log('❌ Webhook không có dữ liệu giao dịch.');
+        return;
+      }
+
+      for (const tx of transactions) {
+        const { description, amount, tid, cusum_balance } = tx;
+
+        console.log(`📩 Nhận giao dịch ${tid}: +${amount}đ | ND: ${description}`);
+
+        // 👉 Giả sử bạn có quy tắc NDCK kiểu "NAP USER123 50000"
+        const match = description?.match(/USER(\d+)/i);
+        if (!match) {
+          console.log(`⚠️ Không tìm thấy userId trong NDCK: ${description}`);
+          continue;
+        }
+
+        const userId = parseInt(match[1]);
+        if (isNaN(userId)) {
+          console.log(`⚠️ userId không hợp lệ trong NDCK: ${description}`);
+          continue;
+        }
+
+        // 👉 Cộng tiền vào ví
+        const request: UpdateMoneyRequest = {
+          userId,
+          amount: amount,
+        };
+
+        await this.updateMoney(request);
+
+        console.log(`✅ Đã cộng ${amount}đ cho userId ${userId}`);
+      }
+    } catch (error) {
+      console.log('❌ Lỗi khi xử lý webhook Casso:', error);
+      throw new RpcException({
+        code: status.INTERNAL,
+        message: 'Lỗi xử lý webhook Casso',
+      });
+    }
+  }
 }

@@ -3,11 +3,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Pay } from './pay.entity';
 import { PayService } from './pay.service';
 import { PayController } from './pay.controller';
+import { PayRestController } from './payrest.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Pay])], 
   providers: [PayService],
-  controllers: [PayController],
+  controllers: [PayController, PayRestController],
   exports: [PayService], // nếu muốn dùng ở module khác
 })
 export class PayModule {}
