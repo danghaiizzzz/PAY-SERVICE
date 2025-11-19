@@ -11,7 +11,7 @@ import type {
 import { FINANCE_SERVICE_NAME } from '../../proto/pay.pb';
 
 @Controller()
-export class AdminController {
+export class FinanceController {
   constructor(
     private readonly financeService: FinanceService,
   ) {}
