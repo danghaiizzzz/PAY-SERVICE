@@ -14,12 +14,15 @@ import {
 import { status } from '@grpc/grpc-js';
 import { RpcException } from '@nestjs/microservices';
 import { winstonLogger } from 'src/logger/logger.config';
+import { FinanceService } from 'src/finance/finance.service';
 
 @Injectable()
 export class PayService {
   constructor(
     @InjectRepository(Pay)
     private readonly payRepository: Repository<Pay>,
+
+    private readonly financeService: FinanceService,
   ) {}
 
   async getPayByUserId(data: GetPayByUserIdRequest): Promise<PayResponse> {
@@ -111,7 +114,7 @@ export class PayService {
         return;
       }
 
-      const { description, id: tid } = data;
+      const { description, id: tid, amount, reference, transactionDateTime } = data;
       console.log(`📩 Nhận giao dịch ${tid}: ND: ${description}`);
 
       if (!description) {
@@ -122,7 +125,6 @@ export class PayService {
       // ✅ Chuẩn hóa ND
       const normalized = description.replace(/%/g, ' ').trim();
       const parts = normalized.split(/\s+/);
-
       const studioIndex = parts.findIndex(p => p.toUpperCase() === 'STUDIO');
 
       // Format phải có ít nhất 5 phần tử: ["HDG", "STUDIO", "1", "dang123", "50000"]
@@ -134,7 +136,8 @@ export class PayService {
       // ✅ Lấy 3 phần tử sau cùng
       const userId = parseInt(parts[studioIndex + 1]);
       const username = parts[studioIndex + 2];
-      const inputAmount = parseInt(parts[studioIndex + 3]);
+      // const inputAmount = parseInt(parts[studioIndex + 3]);
+      const inputAmount = amount;
 
       if (isNaN(userId) || isNaN(inputAmount)) {
         console.log(`⚠️ Dữ liệu không hợp lệ (ID hoặc số tiền): ${description}`);
@@ -148,6 +151,11 @@ export class PayService {
       };
 
       await this.updateMoney(request);
+      await this.financeService.createFinanceRecord({
+        user_id: userId,
+        type: "NAP",
+        amount: inputAmount
+      }) 
 
       winstonLogger.log({ nhiemVu: 'thongBaoNapTien', username: username, amount: inputAmount })
 
@@ -160,7 +168,4 @@ export class PayService {
       });
     }
   }
-
-  /// dòng comment này để connect database pay trên cloud
-
 }

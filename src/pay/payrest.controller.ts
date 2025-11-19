@@ -73,3 +73,25 @@ export class PayRestController {
     }
   }
 }
+
+/*
+
+{ "error": 0, 
+ "data": 
+ { "id": 0, // Mã định danh duy nhất của giao dịch (Casso quy định) 
+ // "reference": "BANK_REF_ID", // Mã giao dịch từ phía ngân hàng 
+ // "description": "giao dich thu nghiem", // Nội dung giao dịch 
+ // "amount": 599000, // Số tiền giao dịch 
+ // "runningBalance": 25000000, // Số dư sau giao dịch 
+ // "transactionDateTime": "2025-02-12 15:36:21", // Thời gian giao dịch 
+ // "accountNumber": "88888888", // Số tài khoản mà giao dịch thuộc về 
+ // "bankName": "VPBank", // Tên ngân hàng 
+ // "bankAbbreviation": "VPB", // Viết tắt tên ngân hàng 
+ // "virtualAccountNumber": "", // Tài khoản ảo 
+ // "virtualAccountName": "", // Tên tài khoản ảo 
+ // "counterAccountName": "", // Tên tài khoản đối ứng 
+ // "counterAccountNumber": "", // Tài khoản đối ứng 
+ // "counterAccountBankId": "", // Mã ngân hàng đối ứng 
+ // "counterAccountBankName": "" // Tên ngân hàng đối ứng } }
+
+*/
